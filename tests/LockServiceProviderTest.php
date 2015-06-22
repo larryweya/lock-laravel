@@ -1,0 +1,63 @@
+<?php namespace tests\BeatSwitch\Lock\Integrations\Laravel;
+
+use Orchestra\Testbench\TestCase;
+use Illuminate\Auth\GenericUser;
+use BeatSwitch\Lock\Callers\Caller;
+use BeatSwitch\Lock\LockAware;
+
+class GenericLockUser extends GenericUser implements Caller {
+
+    use LockAware;
+
+    /**
+     * @return string
+     */
+    public function getCallerType()
+    {
+        return 'users';
+    }
+
+    /**
+     * @return int
+     */
+    public function getCallerId()
+    {
+        return 1;
+    }
+
+    /**
+     * @return array
+     */
+    public function getCallerRoles()
+    {
+        return ['user'];
+    }
+}
+
+class LockServiceProviderTest extends TestCase {
+
+    protected function getPackageProviders($app)
+    {
+        return ['BeatSwitch\Lock\Integrations\Laravel\LockServiceProvider'];
+    }
+
+    /**
+     * Test that the lock service provider sets the lock on the authenticated user
+     */
+    public function testLockResolutionUsesAuthenticatedUser()
+    {
+        $callbackCalled = false;
+        $this->app['config']['lock.permissions'] = function () use(&$callbackCalled) {
+            $callbackCalled = true;
+        };
+
+        $this->app->make('auth')->setUser(new GenericLockUser(['id' => 'generic']));
+
+        // resolve lock instance  after setting the user - like in a real application
+        $lock = $this->app->make('lock');
+
+        $this->assertInstanceOf(
+            'tests\BeatSwitch\Lock\Integrations\Laravel\GenericLockUser', $lock->getCaller());
+        $this->assertTrue($callbackCalled);
+    }
+}

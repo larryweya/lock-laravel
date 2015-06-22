@@ -22,8 +22,6 @@ class LockServiceProvider extends ServiceProvider
         $this->publishes([
             __DIR__ . '/migrations/' => base_path('/database/migrations')
         ], 'migrations');
-
-        $this->bootstrapPermissions();
     }
 
     /**
@@ -84,34 +82,28 @@ class LockServiceProvider extends ServiceProvider
 
                 // Enable the LockAware trait on the user.
                 $app['auth']->user()->setLock($lock);
+            }
+            else
+            {
+                // Get the caller type for the user caller.
+                $userCallerType = $app['config']->get('lock.user_caller_type');
 
-                return $lock;
+                // Bootstrap a SimpleCaller object which has the "guest" role.
+                $lock = $app['lock.manager']->caller(new SimpleCaller($userCallerType, 0, ['guest']));
             }
 
-            // Get the caller type for the user caller.
-            $userCallerType = $app['config']->get('lock.user_caller_type');
+            // Get the permissions callback from the config file.
+            $callback = $this->app['config']->get('lock.permissions', null);
 
-            // Bootstrap a SimpleCaller object which has the "guest" role.
-            return $app['lock.manager']->caller(new SimpleCaller($userCallerType, 0, ['guest']));
+            // Add the permissions which were set in the config file.
+            if (! is_null($callback)) {
+                call_user_func($callback, $this->app['lock.manager'], $lock);
+            }
+
+            return $lock;
         });
 
         $this->app->alias('lock', 'BeatSwitch\Lock\Lock');
-    }
-
-    /**
-     * Here we should execute the permissions callback from the config file so all
-     * the roles and aliases get registered and if we're using the array driver,
-     * all of our permissions get set beforehand.
-     */
-    protected function bootstrapPermissions()
-    {
-        // Get the permissions callback from the config file.
-        $callback = $this->app['config']->get('lock.permissions', null);
-
-        // Add the permissions which were set in the config file.
-        if (! is_null($callback)) {
-            call_user_func($callback, $this->app['lock.manager'], $this->app['lock']);
-        }
     }
 
     /**
