@@ -69,4 +69,16 @@ class LockServiceProviderTest extends TestCase {
         $this->assertInstanceOf(
             'tests\BeatSwitch\Lock\Integrations\Laravel\GenericLockUser', $lock->getCaller());
     }
+
+    /**
+     * Test that the lock service provider sets the lock on the authenticated user
+     */
+    public function testLockResolutionWhenUserIsNotAuthenticated()
+    {
+        // resolve lock instance  after setting/logging in the user - like in a real application
+        $lock = $this->app->make('lock');
+
+        $this->assertInstanceOf(
+            'BeatSwitch\Lock\Callers\SimpleCaller', $lock->getCaller());
+    }
 }
