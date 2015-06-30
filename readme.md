@@ -60,6 +60,16 @@ $ php artisan migrate --package="beatswitch/lock-laravel"
 
 Make sure to set the `BeatSwitch\Lock\LockAware` trait on your `User` model. That way your authed user will receive a Lock instance of itself so you can call permissions directly from your user object. If no user is authed, a `SimpleCaller` object will be bootstrapped which has the `guest` role. That way you can still use the `Lock` facade.
 
+You should also implement the `BeatSwitch\Lock\Callers\Caller` on your `User` model so that when a user has been authenticated, it can be used as a caller instance.
+
+```php
+use BeatSwitch\Lock\Callers\Caller;
+
+class User extends Eloquent implements UserInterface, RemindableInterface, Caller {
+
+    use LockAware;
+```
+
 ## Usage
 
 ### Setting roles and aliases
