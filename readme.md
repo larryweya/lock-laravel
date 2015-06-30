@@ -63,11 +63,17 @@ Make sure to set the `BeatSwitch\Lock\LockAware` trait on your `User` model. Tha
 You should also implement the `BeatSwitch\Lock\Callers\Caller` on your `User` model so that when a user has been authenticated, it can be used as a caller instance.
 
 ```php
+
+...
+
 use BeatSwitch\Lock\Callers\Caller;
 
 class User extends Eloquent implements UserInterface, RemindableInterface, Caller {
 
     use LockAware;
+    
+...
+
 ```
 
 ## Usage
