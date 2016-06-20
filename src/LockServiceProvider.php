@@ -23,8 +23,6 @@ class LockServiceProvider extends ServiceProvider
         $this->publishes([
             __DIR__ . '/migrations/' => base_path('/database/migrations')
         ], 'migrations');
-
-        $this->bootstrapPermissions();
     }
 
     /**
@@ -83,12 +81,23 @@ class LockServiceProvider extends ServiceProvider
 
                 // Enable the LockAware trait on the user.
                 $app['auth']->user()->setLock($lock);
+            }
+            else
+            {
+                // Get the caller type for the user caller.
+                $userCallerType = $app['config']->get('lock.user_caller_type');
 
-                return $lock;
+                // Bootstrap a SimpleCaller object which has the "guest" role.
+                $lock = $app['lock.manager']->caller(new SimpleCaller($userCallerType, 0, ['guest']));
             }
 
-            // Get the caller type for the user caller.
-            $userCallerType = $app['config']->get('lock.user_caller_type');
+            // Get the permissions callback from the config file.
+            $callback = $this->app['config']->get('lock.permissions', null);
+
+            // Add the permissions which were set in the config file.
+            if (! is_null($callback)) {
+                call_user_func($callback, $this->app['lock.manager'], $lock);
+            }
 
             // Bootstrap a SimpleCaller object which has the "guest" role.
             return $app[Manager::class]->caller(new SimpleCaller($userCallerType, 0, ['guest']));
