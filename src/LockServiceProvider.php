@@ -96,18 +96,18 @@ class LockServiceProvider extends ServiceProvider
     }
 
     /**
-     * Here we should execute the permissions callback from the config file so all
+     * Here we should execute the permissions callback class from the config file so all
      * the roles and aliases get registered and if we're using the array driver,
      * all of our permissions get set beforehand.
      */
     protected function bootstrapPermissions()
     {
         // Get the permissions callback from the config file.
-        $callback = $this->app['config']->get('lock.permissions', null);
+        $callbackClass = $this->app['config']->get('lock.permissions', null);
 
         // Add the permissions which were set in the config file.
-        if (! is_null($callback)) {
-            call_user_func($callback, $this->app[Manager::class], $this->app[Lock::class]);
+        if (! is_null($callbackClass)) {
+            call_user_func($callbackClass, $this->app[Manager::class], $this->app[Lock::class]);
         }
     }
 
